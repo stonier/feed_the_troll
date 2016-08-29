@@ -1,0 +1,21 @@
+<package format="2">
+  <name>feed_the_troll</name>
+  <version>0.1.0</version>
+  <description>Mechanisms for loading a ros node at runtime.</description>
+  <maintainer email="d.stonier@gmail.com">Daniel Stonier</maintainer>
+  <license>MIT</license>
+  <url type="website">http://www.ros.org/wiki/feed_the_troll</url>
+  <url type="repository">https://github.com/stonier/feed_the_troll</url>
+  <url type="bugtracker">https://github.com/stonier/feed_the_troll/issues</url>
+  <author>Daniel Stonier</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>feed_the_troll_msgs</depend>
+  <depend>rocon_console</depend>
+  <depend>rocon_python_utils</depend>
+  <depend>rospy</depend>
+  <depend>unique_id</depend>
+  <depend>uuid_msgs</depend>
+
+</package>

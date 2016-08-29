@@ -1,0 +1,8 @@
+
+<!-- Standalone feeder launcher, use with demo_params_troll.launch -->
+
+<launch>
+    <node pkg="feed_the_troll" type="demo_param_feeder" name="$(anon feeder)">
+        <rosparam ns="parameters" command="load" file="$(find feed_the_troll)/parameters/demo_params.yaml"/>
+    </node>
+</launch>

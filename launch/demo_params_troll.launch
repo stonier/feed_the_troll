@@ -1,0 +1,5 @@
+
+<!-- Standalone troll launcher, use with demo_params_feeder.launch -->
+<launch>
+    <node pkg="feed_the_troll" type="demo_troll" name="troll" args="--parameter"/>
+</launch>
