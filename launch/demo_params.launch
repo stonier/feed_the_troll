@@ -4,7 +4,8 @@
 <launch>
     <node pkg="feed_the_troll" type="demo_troll" name="troll" args="--parameter"/>
 
-    <node pkg="feed_the_troll" type="demo_param_feeder" name="$(anon feeder)">
+    <node pkg="feed_the_troll" type="param_feeder" name="$(anon feeder)">
         <rosparam ns="parameters" command="load" file="$(find feed_the_troll)/parameters/demo_params.yaml"/>
+        <rosparam param="service_namespace">/troll</rosparam>
     </node>
 </launch>

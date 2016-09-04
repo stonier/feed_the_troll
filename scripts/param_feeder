@@ -25,5 +25,6 @@ import rospy
 if __name__ == '__main__':
 
     rospy.init_node("feed_parameters")
-    feeder = feed_the_troll.loaders.ParamServerFeeder(service_namespace="/troll")
+    service_namespace = rospy.get_param("~service_namespace")
+    feeder = feed_the_troll.loaders.ParamServerFeeder(service_namespace=service_namespace)
     rospy.spin()
