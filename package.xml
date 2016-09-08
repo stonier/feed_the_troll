@@ -13,6 +13,7 @@
 
   <depend>dynamic_reconfigure</depend>
   <depend>feed_the_troll_msgs</depend>
+  <depend>python-sphinx-rtd-theme</depend>
   <depend>python-termcolor</depend>
   <depend>rocon_console</depend>
   <depend>rocon_python_utils</depend>
@@ -20,4 +21,7 @@
   <depend>unique_id</depend>
   <depend>uuid_msgs</depend>
 
+  <export>
+    <rosdoc config="rosdoc.yaml"/>
+   </export>
 </package>
