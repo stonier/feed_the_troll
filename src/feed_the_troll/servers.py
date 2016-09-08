@@ -6,13 +6,11 @@
 ##############################################################################
 
 """
-.. module:: reconfiguration
+.. module:: servers
    :platform: Unix
-   :synopsis: Reconfigurable reconfiguration.
+   :synopsis: Ready to rumble servers
 
-Oh my spaghettified magnificence,
-Bless my noggin with a tickle from your noodly appendages!
-
+Various servers tailor made in the feeder-troll style to suit various purposes.
 """
 
 ##############################################################################
@@ -32,23 +30,49 @@ import termcolor
 
 class ReConfiguration(object):
     """
-    Utilises the parameter troll to dynamically configure a collection of
-    dynamic reconfigure servers.
+    Ordinarily you run a dynamic reconfigure server in the
+    node of your choice, however this can be awkward if you need to share
+    dynamic reconfigure parameter(s) amongst several nodes. Who should take
+    responsibility for serving it? Or do you have duplicates?
 
-    :ivar troll: the underlying parameter troll that handles the dynamic configuration of the server
+    This standalone node volunteers for that and also allows you to
+    reconfigure it at runtime, so as parts of your system go up and down,
+    the collection of served dynamic reconfigure parameters will go up
+    and down accordingly. Reconfigure your dynamic reconfiguration!
+
+    To use, just launch this node:
+
+    .. code-block:: xml
+
+    .. literalinclude:: ../launch/demo_reconfiguration_server.launch
+       :language: xml
+
+    feed it using this package's parameter feeder:
+
+    .. literalinclude:: ../launch/demo_reconfiguration_feeder.launch
+       :language: xml
+
+    with some parameterisation to fire up the requisite reconfigure servers (note this can be
+    launched and torn down anytime and the server will construct/destruct the reconfigure servers
+    in sync):
+
+    .. literalinclude:: ../parameters/demo_reconfiguration.yaml
+
+    The yaml parameters used above should be fairly self-explanatory.
+
     :ivar debug: print verbose debugging information on loading/unloading/updating
     """
     def __init__(self):
         """
         """
         self.troll = feed_the_troll.trolls.ROSParameters(
-            loading_handler=self.load,
-            unloading_handler=self.unload
+            loading_handler=self._load,
+            unloading_handler=self._unload
         )
         self.reconfigure_servers = {}
         self.debug = rospy.get_param("~debug", False)
 
-    def load(self, unique_identifier, namespace):
+    def _load(self, unique_identifier, namespace):
         """
         :param uuid.UUID unique_identifier:
         :param str namespace: root namespace for configuration on the parameter server
@@ -62,7 +86,7 @@ class ReConfiguration(object):
                                                                             namespace=v['namespace'])
         return (True, "Success")
 
-    def unload(self, unique_identifier, namespace):
+    def _unload(self, unique_identifier, namespace):
         """
         :param uuid.UUID unique_identifier:
         """

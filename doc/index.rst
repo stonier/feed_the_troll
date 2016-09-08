@@ -28,7 +28,7 @@ Contents
    :maxdepth: 2
 
    feeders_and_trolls
-   reconfiguration
+   servers
    modules
    changelog
 
