@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 #
 # License: MIT
-#   https://raw.github.com/stonier/feed_the_troll/devel/LICENSE
 #
 ##############################################################################
 # Documentation
 ##############################################################################
-
 """
-Feed the troll a rosparam namespace!
+Reconfigurable reconfigure server.
 """
-
 ##############################################################################
 # Imports
 ##############################################################################
@@ -23,8 +20,6 @@ import rospy
 ##############################################################################
 
 if __name__ == '__main__':
-
-    rospy.init_node("feed_parameters")
-    service_namespace = rospy.get_param("~service_namespace")
-    feeder = feed_the_troll.loaders.ParamServerFeeder(service_namespace=service_namespace)
-    rospy.spin()
+    rospy.init_node("reconfiguration")
+    troll = feed_the_troll.servers.ReConfiguration()
+    troll.spin()

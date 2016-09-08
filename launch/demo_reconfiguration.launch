@@ -1,0 +1,13 @@
+<!--
+  The reconfigurable reconfigure server with a demo feeder.
+ -->
+<launch>
+  <arg name="debug" default="true" doc="enable/disable verbose loading/unloading/updating information"/>
+
+  <node pkg="feed_the_troll" type="reconfiguration_server.py" name="reconfiguration">
+    <param name="debug" value="$(arg debug)"/>
+  </node>
+  <node pkg="feed_the_troll" type="param_feeder.py" name="feeder">
+      <rosparam command="load" file="$(find feed_the_troll)/parameters/demo_reconfiguration.yaml"/>
+  </node>
+</launch>

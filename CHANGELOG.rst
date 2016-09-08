@@ -4,4 +4,5 @@ Changelog
 
 Forthcoming
 -----------
-* initial prototype
+* reconfiguration server added w/ demo
+* parameter feeder/troll added w/ demos

@@ -11,7 +11,9 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <depend>dynamic_reconfigure</depend>
   <depend>feed_the_troll_msgs</depend>
+  <depend>python-termcolor</depend>
   <depend>rocon_console</depend>
   <depend>rocon_python_utils</depend>
   <depend>rospy</depend>

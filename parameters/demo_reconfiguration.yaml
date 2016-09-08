@@ -1,0 +1,13 @@
+service_namespace: reconfiguration
+
+parameters:
+  demo:
+    module: feed_the_troll.cfg.DemoConfig
+    namespace: /feeder/demo
+
+demo:
+  int_param: 5
+  double_param: 0.6
+  str_param: Dude
+  bool_param: False
+  size: 2

@@ -38,7 +38,7 @@ class Base(object):
         self._unique_identifier = unique_id.toMsg(unique_id.fromRandom())
 
 
-class ParamServerFeeder(Base):
+class ROSParameters(Base):
     """
     The generic feeder script should lookup parameters, enable remappings to handle
     setting of the constructor arguments. This interface is a programming interface
@@ -59,7 +59,7 @@ class ParamServerFeeder(Base):
         @param str service_namespace: where to find the troll services for loading/unloading
         @param str configuration_namepsace:
         """
-        super(ParamServerFeeder, self).__init__(service_namespace)
+        super(ROSParameters, self).__init__(service_namespace)
 
         #############################
         # Parameterisation

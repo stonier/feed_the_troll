@@ -86,7 +86,7 @@ class Base(object):
         return response
 
 
-class ROSParamConfiguration(Base):
+class ROSParameters(Base):
     """
     ...
     """
@@ -99,7 +99,7 @@ class ROSParamConfiguration(Base):
         :param str service_namespace:
         :param str handler:
         """
-        super(ROSParamConfiguration, self).__init__(loading_handler, unloading_handler, service_namespace)
+        super(ROSParameters, self).__init__(loading_handler, unloading_handler, service_namespace)
         self._load_service = rospy.Service(self._service_namespace + 'load/param', feed_the_troll_srvs.LoadFromRosParam, self.load)
 
     def load(self, request):
@@ -110,7 +110,7 @@ class ROSParamConfiguration(Base):
             result=0,
             message="no handler, so configuration not processed"
         )
-        super(ROSParamConfiguration, self).load(request.unique_identifier, request.namespace)
+        super(ROSParameters, self).load(request.unique_identifier, request.namespace)
 
         if self._loading_handler is not None:
             (response.result, response.message) = self._loading_handler(unique_id.fromMsg(request.unique_identifier), request.namespace)

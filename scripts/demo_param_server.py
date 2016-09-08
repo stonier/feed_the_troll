@@ -15,50 +15,29 @@ A troll lurking, waiting for parameter feeding.
 # Imports
 ##############################################################################
 
-import argparse
 import feed_the_troll
 import rocon_console.console as console
 import rospy
-import sys
 
 ##############################################################################
 # Classes
 ##############################################################################
 
 
-def parse_arguments(argv):
-    """
-    :param argv: command line arguments (make sure to filter out ros parts with rospy.myargv()[1:])
-    """
-    parser = argparse.ArgumentParser()
-    troll_group = parser.add_mutually_exclusive_group(required=True)
-    troll_group.add_argument('-p', '--parameter', action='store_true', help='feed on configuration from the ros param server')
-    troll_group.add_argument('-y', '--yaml',      action='store_true', help='feed on configuration from a yaml string')        # noqa @IgnorePep8
-    args = parser.parse_args(argv)
-    return args
-
-
-class Troll(object):
-    def __init__(self, options):
-        """
-        :param options: argparse retruned argument list with booleans indicating kind of troll server requested
-        """
-        if options.parameter:
-            self.server = feed_the_troll.trolls.ROSParamConfiguration(
-                loading_handler=self.load,
-                unloading_handler=self.unload
-            )
-        else:
-            rospy.logwarn("Demo Troll: only parameter trolls supported")
-            sys.exit(1)
+class Server(object):
+    def __init__(self):
+        self.troll = feed_the_troll.trolls.ROSParameters(
+            loading_handler=self.load,
+            unloading_handler=self.unload
+        )
 
     def load(self, unique_identifier, namespace):
         """
         :param uuid.UUID unique_identifier:
         :param str namespace: root namespace for configuration on the parameter server
         """
-        print("Demo Troll: loading [{0}][{1}]".format(unique_identifier, namespace))
-        print("\n{0}".format(self.server))
+        print("Troll: loading [{0}][{1}]".format(unique_identifier, namespace))
+        print("\n{0}".format(self.troll))
         parameters = rospy.get_param(namespace)
         print(console.green + "Loaded Parameters" + console.reset)
         for k, v in parameters.iteritems():
@@ -69,16 +48,12 @@ class Troll(object):
         """
         :param uuid.UUID unique_identifier:
         """
-        print("Demo Troll: unloading [{0}][{1}]".format(unique_identifier, namespace))
+        print("Troll: unloading [{0}][{1}]".format(unique_identifier, namespace))
         parameters = rospy.get_param(namespace)
         print(console.green + "Unloaded Parameters" + console.reset)
         for k, v in parameters.iteritems():
             print("  " + console.cyan + "{0}".format(k) + console.reset + ": " + console.yellow + "{0}".format(v) + console.reset)
         return (True, "Success")
-
-    def spin(self):
-        print("Demo Troll: spinning")
-        rospy.spin()
 
 ##############################################################################
 # Main
@@ -87,7 +62,5 @@ class Troll(object):
 if __name__ == '__main__':
 
     rospy.init_node("troll")
-    options = parse_arguments(rospy.myargv()[1:])
-
-    troll = Troll(options)
-    troll.spin()
+    server = Server()
+    rospy.spin()
