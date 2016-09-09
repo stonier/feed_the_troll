@@ -97,7 +97,12 @@ class ReConfiguration(object):
         parameters = rospy.get_param(namespace)
         self._pretty_print_incoming("Reconfigure Unloading", unique_identifier, namespace, parameters)
         for k, unused_v in parameters.iteritems():
-            del self.reconfigure_servers[k]
+            server = self.reconfigure_servers.pop(k)
+            server.set_service.shutdown()
+            server.descr_topic.unregister()
+            server.update_topic.unregister()
+            del server.set_service
+            del server
         return (True, "Success")
 
     def callback(self, config, level):
