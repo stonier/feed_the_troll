@@ -1,10 +1,23 @@
+# Where the reconfiguration server (loaded by reconfiguration_server.py) is located.
+# This is used to setup the loading/unloading services
 service_namespace: reconfiguration
+
 
 parameters:
   demo:
+    # Name of the python module created by dynamic reconfigure - don't forget the 'Config' suffix!
     module: feed_the_troll.cfg.DemoConfig
-    namespace: /feeder/demo
 
+    # Where the reconfigure server for 'demo' will be created. Usually this will be a relative ns
+    # like this one here so that the parameters can be listed alongside.
+    # You can use a global namespace, however you'll have to load up 'demo's parameters externally.
+    namespace: demo
+
+  # another_demo
+  #   module: reconfigure_parameter_namespace
+  #   namespace: /feeder/another_demo
+
+# The 'demo' dynamic reconfigure parameter overrides
 demo:
   int_param: 5
   double_param: 0.6

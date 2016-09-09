@@ -58,7 +58,8 @@ class ReConfiguration(object):
 
     .. literalinclude:: ../parameters/demo_reconfiguration.yaml
 
-    The yaml parameters used above should be fairly self-explanatory.
+    In short, **you simply need to create your own yaml and launchers** - no
+    python coding necessary.
 
     :ivar debug: print verbose debugging information on loading/unloading/updating
     """
@@ -78,12 +79,15 @@ class ReConfiguration(object):
         :param str namespace: root namespace for configuration on the parameter server
         """
         parameters = rospy.get_param(namespace)
+        feeder_parent_namespace = '/'.join(namespace.split('/')[:-1])
+        feeder_parent_namespace = '/' if not feeder_parent_namespace else feeder_parent_namespace
         self._pretty_print_incoming("Reconfigure Loading", unique_identifier, namespace, parameters)
         for k, v in parameters.iteritems():
+            reconfigure_parameter_namespace = v['namespace'] if v['namespace'].startswith('/') else feeder_parent_namespace + "/" + v['namespace']
             reconfigure_module = importlib.import_module(v['module'])
             self.reconfigure_servers[k] = dynamic_reconfigure.server.Server(reconfigure_module,
                                                                             self.callback,
-                                                                            namespace=v['namespace'])
+                                                                            namespace=reconfigure_parameter_namespace)
         return (True, "Success")
 
     def _unload(self, unique_identifier, namespace):
