@@ -17,6 +17,7 @@
   <depend>python-termcolor</depend>
   <depend>rocon_console</depend>
   <depend>rocon_python_utils</depend>
+  <depend>rosgraph</depend>
   <depend>rospy</depend>
   <depend>unique_id</depend>
   <depend>uuid_msgs</depend>

@@ -20,8 +20,10 @@ Various servers tailor made in the feeder-troll style to suit various purposes.
 import dynamic_reconfigure.server
 import feed_the_troll
 import importlib
+import rosgraph
 import rospy
 import termcolor
+import threading
 
 ##############################################################################
 # ReConfiguration
@@ -70,6 +72,7 @@ class ReConfiguration(object):
             loading_handler=self._load,
             unloading_handler=self._unload
         )
+        self.guard = threading.Lock()
         self.reconfigure_servers = {}
         self.debug = rospy.get_param("~debug", False)
 
@@ -79,31 +82,68 @@ class ReConfiguration(object):
         :param str namespace: root namespace for configuration on the parameter server
         """
         parameters = rospy.get_param(namespace)
-        feeder_parent_namespace = '/'.join(namespace.split('/')[:-1])
-        feeder_parent_namespace = '/' if not feeder_parent_namespace else feeder_parent_namespace
         self._pretty_print_incoming("Reconfigure Loading", unique_identifier, namespace, parameters)
-        for k, v in parameters.iteritems():
-            reconfigure_parameter_namespace = v['namespace'] if v['namespace'].startswith('/') else feeder_parent_namespace + "/" + v['namespace']
-            reconfigure_module = importlib.import_module(v['module'])
-            self.reconfigure_servers[k] = dynamic_reconfigure.server.Server(reconfigure_module,
-                                                                            self.callback,
-                                                                            namespace=reconfigure_parameter_namespace)
+        error_messages = []
+        # checks - parse through every item looking for flaws before doing anything
+        with self.guard:
+            for k, v in parameters.iteritems():
+                if k in self.reconfigure_servers:
+                    error_messages += " - this reconfigure server is already being served [{0}]".format(k)
+                    continue
+                if 'module' not in v:
+                    error_messages += " - no dynamic reconfigure 'module' specified in the parameters feed to the server (e.g. 'feed_the_troll.cfg.DemoConfig']"
+                    continue
+                try:
+                    reconfigure_module = importlib.import_module(v['module'])
+                except ImportError:
+                    error_messages += " - could not import dynamic reconfigure module [{0}]".format(v['module'])
+                    continue
+        if error_messages:
+            rospy.logerr("Reconfiguration: errors loading the passed parameterisations")
+            for message in error_messages:
+                rospy.logerr("               : {0}".format(message[3:]))
+            return (False, "errors loading the passed parameterisations\n" + '\n'.join(error_messages))
+        # setup
+        with self.guard:
+            for k, v in parameters.iteritems():
+                reconfigure_module = importlib.import_module(v['module'])
+                if 'overrides' in v:
+                    rospy.set_param(rosgraph.names.ns_join("~", k), v['overrides'])
+                self.reconfigure_servers[k] = dynamic_reconfigure.server.Server(
+                    reconfigure_module,
+                    self.callback,
+                    namespace=rosgraph.names.ns_join("~", k)
+                )
         return (True, "Success")
 
     def _unload(self, unique_identifier, namespace):
         """
         :param uuid.UUID unique_identifier:
         """
-        parameters = rospy.get_param(namespace)
-        self._pretty_print_incoming("Reconfigure Unloading", unique_identifier, namespace, parameters)
-        for k, unused_v in parameters.iteritems():
-            server = self.reconfigure_servers.pop(k)
-            server.set_service.shutdown()
-            server.descr_topic.unregister()
-            server.update_topic.unregister()
-            del server.set_service
-            del server
-        return (True, "Success")
+        error_messages = []
+        with self.guard:
+            parameters = rospy.get_param(namespace)
+            self._pretty_print_incoming("Reconfigure Unloading", unique_identifier, namespace, parameters)
+            for k, unused_v in parameters.iteritems():
+                reflected_parameters = rosgraph.names.ns_join("~", k)
+                if rospy.has_param(reflected_parameters):
+                    rospy.delete_param(reflected_parameters)
+                if k not in self.reconfigure_servers:
+                    error_messages += " - could not find server to unload [{0}]".format(k)
+                    continue
+                server = self.reconfigure_servers.pop(k)
+                server.set_service.shutdown()
+                server.descr_topic.unregister()
+                server.update_topic.unregister()
+                del server.set_service
+                del server
+        if error_messages:
+            rospy.logerr("Reconfiguration: errors while unloading")
+            for message in error_messages:
+                rospy.logerr("               : {0}".format(message[3:]))
+            return (False, "errors while unloading\n" + '\n'.join(error_messages))
+        else:
+            return (True, "Success")
 
     def callback(self, config, level):
         if self.debug:
@@ -119,11 +159,16 @@ class ReConfiguration(object):
             print("")
             termcolor.cprint(title, 'white', attrs=['bold'])
             print("")
-            print("  " + termcolor.colored("{0: <15}".format('Feeder'), 'cyan') + ": " + termcolor.colored("{0}".format(unique_identifier), 'yellow') +
-                  "-" + termcolor.colored("{0}".format(namespace), 'green'))
+            print("  " + termcolor.colored("{0: <25}".format('Feeder'), 'cyan') + ": " + termcolor.colored("{0}".format(namespace), 'yellow') +
+                  "-" + termcolor.colored("{0}".format(unique_identifier), 'yellow'))
             for k, v in parameters.iteritems():
-                print("  " + termcolor.colored("{0: <15}".format("Server"), 'cyan') + ": " + termcolor.colored("{0}".format(k), 'magenta') +
-                      "-" + termcolor.colored("{0}".format(v['namespace']), 'yellow') + "-" + termcolor.colored("{0}".format(v['module']), 'green'))
+                print("  " + termcolor.colored("{0}".format("Reconfigure Server"), 'green'))
+                print("    " + termcolor.colored("{0: <23}".format("Name"), 'cyan') + ": " + termcolor.colored("{0}".format(k), 'yellow'))
+                print("    " + termcolor.colored("{0: <23}".format("Type"), 'cyan') + ": " + termcolor.colored("{0}".format(v['module']), 'yellow'))
+                if 'overrides' in v:
+                    print("    " + termcolor.colored("{0: <23}".format("Overrides"), 'cyan'))
+                    for k2, v2 in v['overrides'].iteritems():
+                        print("      " + termcolor.colored("{0: <21}".format(k2), 'cyan') + ": " + termcolor.colored("{0}".format(v2), 'yellow'))
 
     def spin(self):
         rospy.spin()
