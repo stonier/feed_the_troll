@@ -36,6 +36,7 @@ class Base(object):
         self._unload_service_name = rosgraph.names.ns_join(self._server_namespace, 'unload')
         self._unload_configuration = rospy.ServiceProxy(self._unload_service_name, feed_the_troll_srvs.Unload)
         self._unique_identifier = unique_id.toMsg(unique_id.fromRandom())
+        self.loaded = False
 
 
 class ROSParameters(Base):
@@ -50,14 +51,17 @@ class ROSParameters(Base):
 
     .. todo:: bond construction/destruction on loading/unloading, just like nodelets do
     """
-    def __init__(self, server_namespace="", configuration_namespace="~parameters"):
+    def __init__(self, server_namespace="",
+                 configuration_namespace="~parameters",
+                 add_shutdown_hook=True):
         """
         The service namespace should be cast at the root of where the troll's services
         can be found (load/param || load/yaml, unload). This is a means for programmatically
         handling the connections. You can of course, also just remap in a roslaunch.
 
-        @param str server_namespace: where to find the troll services for loading/unloading
-        @param str configuration_namespace: where to find parameter configuration to send
+        :param str server_namespace: where to find the troll services for loading/unloading
+        :param str configuration_namespace: where to find parameter configuration to send
+        :param str add_shutdown_hook: not intended for public use (testing only).
         """
         super(ROSParameters, self).__init__(server_namespace)
 
@@ -86,10 +90,15 @@ class ROSParameters(Base):
                                           namespace=self._configuration_namespace)
             if not response.result:
                 rospy.logerr("Feeder: failed to load configuration [{0}]".format(response.message))
+                return
         except rospy.ServiceException as e:
             rospy.logerr("Feeder: failed to contact the configuration server [{0}][{1}]".format(load_service_name, str(e)))
+            return
 
-        rospy.on_shutdown(self.shutdown)
+        self.loaded = True
+
+        if add_shutdown_hook:
+            rospy.on_shutdown(self.shutdown)
 
     def shutdown(self):
         try:

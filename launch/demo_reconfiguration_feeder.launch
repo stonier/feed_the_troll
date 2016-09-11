@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="feed_the_troll" type="param_feeder.py" name="feeder">
+  <node pkg="feed_the_troll" type="param_feeder.py" name="$(anon feeder)">
       <rosparam command="load" file="$(find feed_the_troll)/parameters/demo_reconfiguration.yaml"/>
   </node>
 </launch>

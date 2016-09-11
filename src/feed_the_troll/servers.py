@@ -81,28 +81,34 @@ class ReConfiguration(object):
         :param uuid.UUID unique_identifier:
         :param str namespace: root namespace for configuration on the parameter server
         """
-        parameters = rospy.get_param(namespace)
+        try:
+            parameters = rospy.get_param(namespace)
+        except KeyError:
+            error_message = "could not retrieve parameters for configuration [{0}]".format(namespace)
+            rospy.logerr("Reconfiguration: {0}".format(error_message))
+            return (False, error_message)
+
         self._pretty_print_incoming("Reconfigure Loading", unique_identifier, namespace, parameters)
         error_messages = []
         # checks - parse through every item looking for flaws before doing anything
         with self.guard:
             for k, v in parameters.iteritems():
                 if k in self.reconfigure_servers:
-                    error_messages += " - this reconfigure server is already being served [{0}]".format(k)
+                    error_messages.append("this reconfigure server is already being served [{0}]".format(k))
                     continue
                 if 'module' not in v:
-                    error_messages += " - no dynamic reconfigure 'module' specified in the parameters feed to the server (e.g. 'feed_the_troll.cfg.DemoConfig']"
+                    error_messages.append("no dynamic reconfigure 'module' specified in the parameters feed to the server (e.g. 'feed_the_troll.cfg.DemoConfig']")
                     continue
                 try:
                     reconfigure_module = importlib.import_module(v['module'])
                 except ImportError:
-                    error_messages += " - could not import dynamic reconfigure module [{0}]".format(v['module'])
+                    error_messages.append("could not import dynamic reconfigure module [{0}]".format(v['module']))
                     continue
         if error_messages:
             rospy.logerr("Reconfiguration: errors loading the passed parameterisations")
             for message in error_messages:
-                rospy.logerr("               : {0}".format(message[3:]))
-            return (False, "errors loading the passed parameterisations\n" + '\n'.join(error_messages))
+                rospy.logerr("               : {0}".format(message))
+            return (False, ', '.join(error_messages))
         # setup
         with self.guard:
             for k, v in parameters.iteritems():
@@ -129,7 +135,7 @@ class ReConfiguration(object):
                 if rospy.has_param(reflected_parameters):
                     rospy.delete_param(reflected_parameters)
                 if k not in self.reconfigure_servers:
-                    error_messages += " - could not find server to unload [{0}]".format(k)
+                    error_messages.append("could not find server to unload [{0}]".format(k))
                     continue
                 server = self.reconfigure_servers.pop(k)
                 server.set_service.shutdown()
@@ -140,8 +146,8 @@ class ReConfiguration(object):
         if error_messages:
             rospy.logerr("Reconfiguration: errors while unloading")
             for message in error_messages:
-                rospy.logerr("               : {0}".format(message[3:]))
-            return (False, "errors while unloading\n" + '\n'.join(error_messages))
+                rospy.logerr("               : {0}".format(message))
+            return (False, ', '.join(error_messages))
         else:
             return (True, "Success")
 
@@ -164,7 +170,10 @@ class ReConfiguration(object):
             for k, v in parameters.iteritems():
                 print("  " + termcolor.colored("{0}".format("Reconfigure Server"), 'green'))
                 print("    " + termcolor.colored("{0: <23}".format("Name"), 'cyan') + ": " + termcolor.colored("{0}".format(k), 'yellow'))
-                print("    " + termcolor.colored("{0: <23}".format("Type"), 'cyan') + ": " + termcolor.colored("{0}".format(v['module']), 'yellow'))
+                if 'module' in v:
+                    print("    " + termcolor.colored("{0: <23}".format("Type"), 'cyan') + ": " + termcolor.colored("{0}".format(v['module']), 'yellow'))
+                else:
+                    print("    " + termcolor.colored("{0: <23}".format("Type"), 'cyan') + ": " + termcolor.colored("missing", 'red'))
                 if 'overrides' in v:
                     print("    " + termcolor.colored("{0: <23}".format("Overrides"), 'cyan'))
                     for k2, v2 in v['overrides'].iteritems():

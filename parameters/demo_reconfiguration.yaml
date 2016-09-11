@@ -1,11 +1,17 @@
-# The location of the reconfiguration server, for creation of load/unload handles
+# Point this feeder at the reconfiguration server - this is where the load/unload
+# services can be found. It follws the usual ros namespacing conventions - i.e.
+# it can be an absolute global name (e.g. /reconfiguration) or it can be
+# representative of a sibling namespace as is the case here
 server_namespace: reconfiguration
 
-# Parameterise your list of reconfigure servers here
+# Define your individual dyn-recfg servers here
 parameters:
+
+  # A dyn-recfg server definition - with this name it will be found at 'reconfiguration/dude'
   dude:
-    # Name of the python module created by dynamic reconfigure - don't forget the 'Config' suffix!
+    # The dyn-recfg type (it is actually a python module) - don't forget the 'Config' suffix!
     module: feed_the_troll.cfg.DemoConfig
+    # Load some initialisations to the param server that override those in the .cfg files
     overrides:
       int_param: 5
       double_param: 0.6
@@ -13,8 +19,8 @@ parameters:
       bool_param: False
       size: 2
 
+  # Another dyn-recfg server definition - will be found at 'reconfiguration/dudette'
   dudette:
-    # Name of the python module created by dynamic reconfigure - don't forget the 'Config' suffix!
     module: feed_the_troll.cfg.DemoConfig
     overrides:
       int_param: 5
@@ -22,14 +28,3 @@ parameters:
       str_param: Dudette
       bool_param: False
       size: 2
-
-    # Where the reconfigure server for 'demo' will be created. Usually this will be a relative ns
-    # like this one here so that the parameters can be listed alongside.
-    # You can use a global namespace, however you'll have to load up 'demo's parameters externally.
-    # namespace: demo
-
-  # another_demo
-  #   module: reconfigure_parameter_namespace
-  #   namespace: /feeder/another_demo
-
-# The 'demo' dynamic reconfigure parameter overrides

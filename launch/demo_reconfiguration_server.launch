@@ -1,7 +1,7 @@
 <launch>
   <arg name="debug" default="true" doc="enable/disable verbose loading/unloading/updating information"/>
 
-  <node pkg="feed_the_troll" type="reconfiguration_server.py" name="reconfiguration">
+  <node pkg="feed_the_troll" type="reconfiguration_server.py" name="reconfiguration" output="screen">
     <param name="debug" value="$(arg debug)"/>
   </node>
 </launch>

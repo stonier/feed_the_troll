@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(feed_the_troll)
 
 ##############################################################################
-# Catkin
+# Find Packages
 ##############################################################################
 
 find_package(catkin
@@ -15,9 +15,16 @@ find_package(catkin
         dynamic_reconfigure
 )
 
+if (CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+endif()
+
+##############################################################################
+# Catkin
+##############################################################################
+
 catkin_python_setup()
 
-# Dynamic Reconfigure
 generate_dynamic_reconfigure_options(
     dynamic_reconfigure/Demo.cfg
 )
@@ -26,6 +33,10 @@ catkin_package(
     CATKIN_DEPENDS
         dynamic_reconfigure
 )
+
+if(CATKIN_ENABLE_TESTING)
+  add_subdirectory(tests)
+endif()
 
 ##############################################################################
 # Installs
