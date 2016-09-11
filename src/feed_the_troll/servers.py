@@ -1,10 +1,10 @@
 #
 # License: MIT
+#   https://raw.githubusercontent.com/stonier/feed_the_troll/devel/LICENSE
 #
 ##############################################################################
 # Description
 ##############################################################################
-
 """
 .. module:: servers
    :platform: Unix
@@ -12,7 +12,6 @@
 
 Various servers tailor made in the feeder-troll style to suit various purposes.
 """
-
 ##############################################################################
 # Imports
 ##############################################################################
@@ -32,17 +31,44 @@ import threading
 
 class ReConfiguration(object):
     """
-    Ordinarily you run a dynamic reconfigure server in the
-    node of your choice, however this can be awkward if you need to share
-    dynamic reconfigure parameter(s) amongst several nodes. Who should take
-    responsibility for serving it? Or do you have duplicates?
+    **About**
 
-    This standalone node volunteers for that and also allows you to
-    reconfigure it at runtime, so as parts of your system go up and down,
-    the collection of served dynamic reconfigure parameters will go up
-    and down accordingly. Reconfigure your dynamic reconfiguration!
+    *Q) What to do when you need to share dynamic_reconfigure variables
+    amongst a collection of nodes?*
 
-    To use, just launch this node:
+    A good example is sharing navigation motion constraints amongst
+    a collection of nodes that control the motion of the base (general
+    navigation, parking, docking, ...)
+
+    This standalone node volunteers for the responsibility of loading and
+    managing dynamic reconfigure servers from a central location. All you
+    need do is feed it with a yaml/rosparam configuration that will define
+    the dynamic_reconfigure servers you wish to fire up along with any
+    initial parameter overrides to use when instantiating them.
+
+    It also manages these for free. That is, it is able to bring the
+    dynamic reconfigure servers up and down in sync with the starting
+    up and tearing down of your higher level applications.
+
+    *Reconfigure your Reconfiguration!*
+
+    **Usage - Reconfiguration Server**
+
+    You will need to prepare the following (no coding necessary!):
+
+    * A yaml defining the dyn-recfg servers you need
+    * A launcher for starting the reconfiguration server
+    * A launcher for starting the feeder with your yaml configuration
+
+    If you're familiar with nodelet managers and nodelets, this process is similar.
+    When the feeder node launches it sends a request to the server to fire up
+    the specified list of dynamic reconfigure servers. When it terminates,
+    it will shoot one last service call off to the reconfiguration server to
+    shutdown the previously started dynamic reconfigure servers.
+
+    **Example - Reconfiguration Server**
+
+    An example set of files (also available as a demo within this package):
 
     .. code-block:: xml
 
@@ -54,14 +80,22 @@ class ReConfiguration(object):
     .. literalinclude:: ../launch/demo_reconfiguration_feeder.launch
        :language: xml
 
-    with some parameterisation to fire up the requisite reconfigure servers (note this can be
-    launched and torn down anytime and the server will construct/destruct the reconfigure servers
-    in sync):
-
     .. literalinclude:: ../parameters/demo_reconfiguration.yaml
+       :language: yaml
 
-    In short, **you simply need to create your own yaml and launchers** - no
-    python coding necessary.
+    **Usage - Reconfiguration Clients**
+
+    Client programs that need to tune into the dynamic reconfigure servers simply
+    need to instantiate a dynamic reconfigure client, or more simply, a subscriber
+    listening to the dynamic reconfigure server's private ``parameter_updates`` topic.
+
+    **Examples - Reconfiguration Clients**
+
+    Python:
+
+    .. literalinclude:: ../scripts/demo_reconfiguration_client.py
+       :language: python
+       :lines: 10-27
 
     :ivar debug: print verbose debugging information on loading/unloading/updating
     """
@@ -157,7 +191,8 @@ class ReConfiguration(object):
             termcolor.cprint("Reconfiguration Updating", 'white', attrs=['bold'])
             print("")
             for k, v in config.iteritems():
-                print("  " + termcolor.colored("{0: <25}".format(k), 'cyan') + ": " + termcolor.colored("{0}".format(v), 'yellow'))
+                if k != "groups":
+                    print("  " + termcolor.colored("{0: <25}".format(k), 'cyan') + ": " + termcolor.colored("{0}".format(v), 'yellow'))
         return config
 
     def _pretty_print_incoming(self, title, unique_identifier, namespace, parameters):

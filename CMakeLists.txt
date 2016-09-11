@@ -45,6 +45,7 @@ endif()
 install(
     PROGRAMS
         scripts/demo_param_server.py
+        scripts/demo_reconfiguration_client.py
         scripts/param_feeder.py
         scripts/reconfiguration_server.py
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

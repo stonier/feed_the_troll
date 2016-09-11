@@ -12,8 +12,8 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   feeders_and_trolls
-   servers
+   trolls_and_feeders
+   reconfiguration
    modules
    changelog
 

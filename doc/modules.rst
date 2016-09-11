@@ -9,22 +9,22 @@ feed_the_troll
 .. automodule:: feed_the_troll
    :synopsis: feed the trolls with dynamic configuration for your servers
 
-py_trees.feeders
-----------------
+feed_the_troll.feeders
+----------------------
 
 .. automodule:: feed_the_troll.feeders
     :members:
     :show-inheritance:
 
-py_trees.trolls
----------------
+feed_the_troll.trolls
+---------------------
 
 .. automodule:: feed_the_troll.trolls
     :members:
     :show-inheritance:
 
-py_trees.servers
-----------------
+feed_the_troll.servers
+----------------------
 
 .. automodule:: feed_the_troll.servers
     :members:

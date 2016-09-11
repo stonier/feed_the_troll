@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 #
 # License: MIT
-#   https://raw.github.com/stonier/feed_the_troll/devel/LICENSE
+#   https://raw.githubusercontent.com/stonier/feed_the_troll/devel/LICENSE
 #
 ##############################################################################
 # Documentation
 ##############################################################################
-
 """
 Feed the troll a rosparam namespace!
 """
-
 ##############################################################################
 # Imports
 ##############################################################################

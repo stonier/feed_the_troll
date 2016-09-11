@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
 # License: MIT
+#   https://raw.githubusercontent.com/stonier/feed_the_troll/devel/LICENSE
 #
 ##############################################################################
 # Documentation
