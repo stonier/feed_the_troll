@@ -147,12 +147,13 @@ class ReConfiguration(object):
         with self.guard:
             for k, v in parameters.iteritems():
                 reconfigure_module = importlib.import_module(v['module'])
+                reconfigure_server_namespace = v['namespace'] if 'namespace' in v else '~'
                 if 'overrides' in v:
-                    rospy.set_param(rosgraph.names.ns_join("~", k), v['overrides'])
+                    rospy.set_param(rosgraph.names.ns_join(reconfigure_server_namespace, k), v['overrides'])
                 self.reconfigure_servers[k] = dynamic_reconfigure.server.Server(
                     reconfigure_module,
                     self.callback,
-                    namespace=rosgraph.names.ns_join("~", k)
+                    namespace=rosgraph.names.ns_join(reconfigure_server_namespace, k)
                 )
         return (True, "Success")
 

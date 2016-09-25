@@ -22,6 +22,8 @@ parameters:
   # Another dyn-recfg server definition - will be found at 'reconfiguration/dudette'
   dudette:
     module: feed_the_troll.cfg.DemoConfig
+    # optionally direct the reconfigure server to be somewhere other than the reconfiguration server's private namespace
+    namespace: /foo/troll
     overrides:
       int_param: 5
       double_param: 0.6
