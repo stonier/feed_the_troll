@@ -18,6 +18,7 @@ Various servers tailor made in the feeder-troll style to suit various purposes.
 
 import dynamic_reconfigure.server
 import feed_the_troll
+import functools
 import importlib
 import rosgraph
 import rospy
@@ -152,7 +153,7 @@ class ReConfiguration(object):
                     rospy.set_param(rosgraph.names.ns_join(reconfigure_server_namespace, k), v['overrides'])
                 self.reconfigure_servers[k] = dynamic_reconfigure.server.Server(
                     reconfigure_module,
-                    self.callback,
+                    functools.partial(self.callback, name=k),
                     namespace=rosgraph.names.ns_join(reconfigure_server_namespace, k)
                 )
         return (True, "Success")
@@ -186,14 +187,26 @@ class ReConfiguration(object):
         else:
             return (True, "Success")
 
-    def callback(self, config, level):
+    def callback(self, config, level, name):
+        """
+        The name is an additional argument not usually in a dynamic reconfigure server callback, but is fixed by
+        a functools partial so that we can provide extra useful debugging information by stating *which* dynamic
+        reconfigure server it relates to.
+
+        :param dynamic_reconfigure.encoding.Config config: dynamic reconfigure configuration object, holds all the variables
+        :param int level:
+        :param str name: name of the reconfiguration server for which these configuration variables apply
+        """
         if self.debug:
             print("")
             termcolor.cprint("Reconfiguration Updating", 'white', attrs=['bold'])
             print("")
+            termcolor.cprint("  Reconfigure Server", "green")
+            print("    " + termcolor.colored("{0: <23}".format("Name"), 'cyan') + ": " + termcolor.colored("{0}".format(name), 'yellow'))
+            termcolor.cprint("    Overrides", "cyan")
             for k, v in config.iteritems():
                 if k != "groups":
-                    print("  " + termcolor.colored("{0: <25}".format(k), 'cyan') + ": " + termcolor.colored("{0}".format(v), 'yellow'))
+                    print("      " + termcolor.colored("{0: <21}".format(k), 'cyan') + ": " + termcolor.colored("{0}".format(v), 'yellow'))
         return config
 
     def _pretty_print_incoming(self, title, unique_identifier, namespace, parameters):
