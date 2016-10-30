@@ -41,8 +41,8 @@ the specified list of dynamic reconfigure servers. When it terminates,
 it will shoot one last service call off to the reconfiguration server to
 shutdown the previously started dynamic reconfigure servers.
 
-Example - Launch a Server
-=========================
+Example - Launch Reconfiguration
+================================
 
 An example set of files (also available as a demo within this package):
 
@@ -56,6 +56,42 @@ feed it using this package's parameter feeder:
 
 .. literalinclude:: ../parameters/demo_reconfiguration.yaml
    :language: yaml
+
+A snapshot of the rosparam server is useful to illustrate where the various parameters
+get sourced and eventually used for the reconfigure server. Note *dude* and *dudette* get
+placed in two places - *dude* is inside the reconfiguration server, while *dudette* has been
+explicitly instructed to start its dynamic reconfigure server elsewhere.
+
+.. code-block:: bash
+
+   $ rosparam list
+   /feeder_snorriheim_24447_410607863113126015/parameters/dude/module
+   /feeder_snorriheim_24447_410607863113126015/parameters/dude/overrides/bool_param
+   /feeder_snorriheim_24447_410607863113126015/parameters/dude/overrides/double_param
+   /feeder_snorriheim_24447_410607863113126015/parameters/dude/overrides/int_param
+   /feeder_snorriheim_24447_410607863113126015/parameters/dude/overrides/size
+   /feeder_snorriheim_24447_410607863113126015/parameters/dude/overrides/str_param
+   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/module
+   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/namespace
+   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/overrides/bool_param
+   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/overrides/double_param
+   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/overrides/int_param
+   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/overrides/size
+   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/overrides/str_param
+   /feeder_snorriheim_24447_410607863113126015/server_namespace
+   /foo/troll/dudette/bool_param
+   /foo/troll/dudette/double_param
+   /foo/troll/dudette/int_param
+   /foo/troll/dudette/size
+   /foo/troll/dudette/str_param
+   /reconfiguration/debug
+   /reconfiguration/dude/bool_param
+   /reconfiguration/dude/double_param
+   /reconfiguration/dude/int_param
+   /reconfiguration/dude/size
+   /reconfiguration/dude/str_param
+   /reconfiguration_client/name
+
 
 Clients
 =======
