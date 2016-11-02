@@ -16,9 +16,12 @@ def config_callback(config):
     print("")
     termcolor.cprint("Reconfiguration Client Callback", 'yellow', attrs=['bold'])
     print("")
+    termcolor.cprint("  Reconfigure Client", "green")
+    print("    " + termcolor.colored("{0: <23}".format("Name"), 'cyan') + ": " + termcolor.colored("{0}".format("dude"), 'yellow'))
+    termcolor.cprint("    Parameters", "cyan")
     for k, v in config.iteritems():
         if k != "groups":
-            print("  " + termcolor.colored("{0: <25}".format(k), 'cyan') + ": " + termcolor.colored("{0}".format(v), 'yellow'))
+            print("      " + termcolor.colored("{0: <21}".format(k), 'cyan') + ": " + termcolor.colored("{0}".format(v), 'yellow'))
     print("")
 
 if __name__ == '__main__':
