@@ -72,5 +72,5 @@ the loaded/unloaded parameterisations to standard output, but anything is possib
 
 And a launch file to kickstart it:
 
-.. literalinclude:: ../launch/demo_param_server.launch
+.. literalinclude:: ../launch/demo_params_server.launch
    :language: xml
