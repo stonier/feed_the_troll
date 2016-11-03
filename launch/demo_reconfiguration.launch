@@ -8,8 +8,7 @@
     <arg name="debug" value="$(arg debug)"/>
   </include>
   <include file="$(find feed_the_troll)/launch/demo_reconfiguration_feeder.launch"/>
-
   <node pkg="feed_the_troll" name="reconfiguration_client" type="demo_reconfiguration_client.py">
-    <param name="name" value="/reconfiguration/dude"/>
+    <param name="name" value="/foo/troll/dudette"/>
   </node>
 </launch>

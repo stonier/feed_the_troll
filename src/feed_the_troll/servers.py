@@ -5,6 +5,7 @@
 ##############################################################################
 # Description
 ##############################################################################
+
 """
 .. module:: servers
    :platform: Unix
@@ -26,8 +27,51 @@ import termcolor
 import threading
 
 ##############################################################################
+# helpers
+##############################################################################
+
+
+def validate_server_parameters(server_parameters):
+    """
+    Take in a reconfiguration setup on the parameter server (dic of dyn reconf
+    server names with corresponding namespace, module & overrides values) and
+    check if it is in a proper format as well as whether the module too exists.
+    """
+    error_messages = []
+    for v in server_parameters.values():
+        if 'module' not in v:
+            error_messages.append("no dynamic reconfigure 'module' specified in the reconfigure server settings (e.g. 'feed_the_troll.cfg.DemoConfig']")
+            continue
+        try:
+            importlib.import_module(v['module'])
+        except ImportError:
+            error_messages.append("could not import dynamic reconfigure module [{0}]".format(v['module']))
+            continue
+    return error_messages
+
+
+def namespace_from_configuration(server_name, server_configuration):
+    """
+    :param ... configuration: troll reconfiguration server parameters (name, namespace, overrides)
+    """
+    root_namespace = server_configuration['namespace'] if 'namespace' in server_configuration else '~'
+    return rosgraph.names.ns_join(root_namespace, server_name)
+
+##############################################################################
 # ReConfiguration
 ##############################################################################
+
+
+class ReconfigureServerInfo(object):
+    """
+    A simple class holding current information about a running dynamic
+    reconfigure server.
+     """
+    def __init__(self):
+        self.is_default_instance = False  # is the current instance a default server?
+        self.default_configuration = None  # if there is a default server, what is it's configuration?
+        self.namespace = None  # where the parameters are stored (dyn reconf server doesnt actuall save this, so we do
+        self.server = None  # the currently running instance
 
 
 class ReConfiguration(object):
@@ -103,13 +147,48 @@ class ReConfiguration(object):
     def __init__(self):
         """
         """
+        self.guard = threading.Lock()
+        self.reconfigure_servers = {}
+        self.debug = rospy.get_param("~debug", False)
+        self._start_default_servers()
+        # must come after everything else is set up
         self.troll = feed_the_troll.trolls.ROSParameters(
             loading_handler=self._load,
             unloading_handler=self._unload
         )
-        self.guard = threading.Lock()
-        self.reconfigure_servers = {}
-        self.debug = rospy.get_param("~debug", False)
+
+    def _start_server(self, server_name, server_configuration):
+        """
+        :param str name: unique name string for the server
+        :param ... configuration: troll reconfiguration server parameters (name, namespace, overrides)
+        """
+        reconfigure_module = importlib.import_module(server_configuration['module'])
+        reconfigure_server_namespace = namespace_from_configuration(server_name, server_configuration)
+        if 'overrides' in server_configuration:
+            rospy.set_param(reconfigure_server_namespace, server_configuration['overrides'])
+        return dynamic_reconfigure.server.Server(
+            reconfigure_module,
+            functools.partial(self.callback, name=server_name),
+            namespace=reconfigure_server_namespace
+        )
+
+    def _start_default_servers(self):
+        try:
+            default_server_parameters = rospy.get_param("~servers")
+        except KeyError:
+            return  # nothing to do
+        error_messages = validate_server_parameters(default_server_parameters)
+        if error_messages:
+            rospy.logerr("Reconfiguration: errors in the default server configurations")
+            for message in error_messages:
+                rospy.logerr("               : {0}".format(message))
+            return
+        for server_name, server_configuration in default_server_parameters.iteritems():
+            self.reconfigure_servers[server_name] = ReconfigureServerInfo()
+            self.reconfigure_servers[server_name].is_default_instance = True
+            self.reconfigure_servers[server_name].default_configuration = server_configuration
+            self.reconfigure_servers[server_name].namespace = namespace_from_configuration(server_name, server_configuration)
+            self.reconfigure_servers[server_name].server = self._start_server(server_name, server_configuration)
 
     def _load(self, unique_identifier, namespace):
         """
@@ -117,27 +196,18 @@ class ReConfiguration(object):
         :param str namespace: root namespace for configuration on the parameter server
         """
         try:
-            parameters = rospy.get_param(namespace)
+            incoming_configuration = rospy.get_param(namespace)
         except KeyError:
             error_message = "could not retrieve parameters for configuration [{0}]".format(namespace)
             rospy.logerr("Reconfiguration: {0}".format(error_message))
             return (False, error_message)
-
-        self._pretty_print_incoming("Reconfigure Loading", unique_identifier, namespace, parameters)
-        error_messages = []
-        # checks - parse through every item looking for flaws before doing anything
+        self._pretty_print_incoming("Reconfigure Loading", unique_identifier, namespace, incoming_configuration)
+        # checks
+        error_messages = validate_server_parameters(incoming_configuration)
         with self.guard:
-            for k, v in parameters.iteritems():
-                if k in self.reconfigure_servers:
+            for k in incoming_configuration.keys():
+                if k in self.reconfigure_servers and not self.reconfigure_servers[k].is_default_instance:
                     error_messages.append("this reconfigure server is already being served [{0}]".format(k))
-                    continue
-                if 'module' not in v:
-                    error_messages.append("no dynamic reconfigure 'module' specified in the parameters feed to the server (e.g. 'feed_the_troll.cfg.DemoConfig']")
-                    continue
-                try:
-                    reconfigure_module = importlib.import_module(v['module'])
-                except ImportError:
-                    error_messages.append("could not import dynamic reconfigure module [{0}]".format(v['module']))
                     continue
         if error_messages:
             rospy.logerr("Reconfiguration: errors loading the passed parameterisations")
@@ -146,16 +216,24 @@ class ReConfiguration(object):
             return (False, ', '.join(error_messages))
         # setup
         with self.guard:
-            for k, v in parameters.iteritems():
-                reconfigure_module = importlib.import_module(v['module'])
-                reconfigure_server_namespace = v['namespace'] if 'namespace' in v else '~'
-                if 'overrides' in v:
-                    rospy.set_param(rosgraph.names.ns_join(reconfigure_server_namespace, k), v['overrides'])
-                self.reconfigure_servers[k] = dynamic_reconfigure.server.Server(
-                    reconfigure_module,
-                    functools.partial(self.callback, name=k),
-                    namespace=rosgraph.names.ns_join(reconfigure_server_namespace, k)
-                )
+            for server_name, server_configuration in incoming_configuration.iteritems():
+                if server_name not in self.reconfigure_servers:
+                    self.reconfigure_servers[server_name] = ReconfigureServerInfo()
+                    self.reconfigure_servers[server_name].is_default_instance = False
+                    self.reconfigure_servers[server_name].default_configuration = None
+                    self.reconfigure_servers[server_name].namespace = namespace_from_configuration(server_name, server_configuration)
+                    self.reconfigure_servers[server_name].server = self._start_server(server_name, server_configuration)
+                else:
+                    # at this point, we know it is a deafult instance (we reject running and non-default above)
+                    #   1. save the latest default configuration
+                    current_dynamic_reconfigure_parameters = rospy.get_param(self.reconfigure_servers[server_name].namespace)
+                    self.reconfigure_servers[server_name].default_configuration['overrides'] = current_dynamic_reconfigure_parameters
+                    #   2. set the new parameters
+                    # magically merge current and incoming (this only works when keys are strings - http://treyhunner.com/2016/02/how-to-merge-dictionaries-in-python/
+                    new_parameters = dict(current_dynamic_reconfigure_parameters, **incoming_configuration[server_name]['overrides'])
+                    self.reconfigure_servers[server_name].server.update_configuration(new_parameters)
+                    #   3. set is_default_instance to False
+                    self.reconfigure_servers[server_name].is_default_instance = False
         return (True, "Success")
 
     def _unload(self, unique_identifier, namespace):
@@ -163,22 +241,30 @@ class ReConfiguration(object):
         :param uuid.UUID unique_identifier:
         """
         error_messages = []
+        parameters = rospy.get_param(namespace)
+        self._pretty_print_incoming("Reconfigure Unloading", unique_identifier, namespace, parameters)
         with self.guard:
-            parameters = rospy.get_param(namespace)
-            self._pretty_print_incoming("Reconfigure Unloading", unique_identifier, namespace, parameters)
-            for k, unused_v in parameters.iteritems():
-                reflected_parameters = rosgraph.names.ns_join("~", k)
+            for server_name, unused_v in parameters.iteritems():
+                reflected_parameters = rosgraph.names.ns_join("~", server_name)
                 if rospy.has_param(reflected_parameters):
                     rospy.delete_param(reflected_parameters)
-                if k not in self.reconfigure_servers:
-                    error_messages.append("could not find server to unload [{0}]".format(k))
+                if server_name not in self.reconfigure_servers:
+                    error_messages.append("could not find server to unload [{0}]".format(server_name))
                     continue
-                server = self.reconfigure_servers.pop(k)
-                server.set_service.shutdown()
-                server.descr_topic.unregister()
-                server.update_topic.unregister()
-                del server.set_service
-                del server
+                if self.reconfigure_servers[server_name].is_default_instance:
+                    error_messages.append("refusing to unload a default instance [{0}]".format(server_name))
+                    continue
+                server_info = self.reconfigure_servers[server_name]
+                if server_info.default_configuration is None:  # its a server created on the fly
+                    server_info.server.set_service.shutdown()
+                    server_info.server.descr_topic.unregister()
+                    server_info.server.update_topic.unregister()
+                    del server_info.server.set_service
+                    del server_info.server
+                    self.reconfigure_servers.pop(server_name)
+                else:  # there is a default instance and configuration behind it
+                    server_info.server.update_configuration(server_info.default_configuration['overrides'])
+                    server_info.is_default_instance = True
         if error_messages:
             rospy.logerr("Reconfiguration: errors while unloading")
             for message in error_messages:
@@ -214,8 +300,9 @@ class ReConfiguration(object):
             print("")
             termcolor.cprint(title, 'white', attrs=['bold'])
             print("")
-            print("  " + termcolor.colored("{0: <25}".format('Feeder'), 'cyan') + ": " + termcolor.colored("{0}".format(namespace), 'yellow') +
-                  "-" + termcolor.colored("{0}".format(unique_identifier), 'yellow'))
+            print("  " + termcolor.colored("{0: <25}".format('Feeder'), 'green'))
+            print("    " + termcolor.colored("{0: <23}".format('Namespace'), 'cyan') + ": " + termcolor.colored("{0}".format(namespace), 'yellow'))
+            print("    " + termcolor.colored("{0: <23}".format('Unique Identifier'), 'cyan') + ": " + termcolor.colored("{0}".format(unique_identifier), 'yellow'))
             for k, v in parameters.iteritems():
                 print("  " + termcolor.colored("{0}".format("Reconfigure Server"), 'green'))
                 print("    " + termcolor.colored("{0: <23}".format("Name"), 'cyan') + ": " + termcolor.colored("{0}".format(k), 'yellow'))
