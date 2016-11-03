@@ -227,17 +227,10 @@ class ReConfiguration(object):
                     # at this point, we know it is a deafult instance (we reject running and non-default above)
                     #   1. save the latest default configuration
                     current_dynamic_reconfigure_parameters = rospy.get_param(self.reconfigure_servers[server_name].namespace)
-                    print("Namespace: %s" % self.reconfigure_servers[server_name].namespace)
-                    print("Current Parameters: %s" % current_dynamic_reconfigure_parameters)
-                    print("Incoming Configuration: %s" % incoming_configuration[server_name])
-                    print("Original Configuration: %s" % self.reconfigure_servers[server_name].default_configuration)
                     self.reconfigure_servers[server_name].default_configuration['overrides'] = current_dynamic_reconfigure_parameters
-                    print("New Configuration: %s" % self.reconfigure_servers[server_name].default_configuration)
                     #   2. set the new parameters
-                    print("Incoming Parameters: %s" % incoming_configuration[server_name]['overrides'])
                     # magically merge current and incoming (this only works when keys are strings - http://treyhunner.com/2016/02/how-to-merge-dictionaries-in-python/
                     new_parameters = dict(current_dynamic_reconfigure_parameters, **incoming_configuration[server_name]['overrides'])
-                    print("New Parameters: %s" % new_parameters)
                     self.reconfigure_servers[server_name].server.update_configuration(new_parameters)
                     #   3. set is_default_instance to False
                     self.reconfigure_servers[server_name].is_default_instance = False
