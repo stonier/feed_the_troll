@@ -17,7 +17,7 @@ def config_callback(config):
     termcolor.cprint("Reconfiguration Client Callback", 'yellow', attrs=['bold'])
     print("")
     termcolor.cprint("  Reconfigure Client", "green")
-    print("    " + termcolor.colored("{0: <23}".format("Name"), 'cyan') + ": " + termcolor.colored("{0}".format("dude"), 'yellow'))
+    print("    " + termcolor.colored("{0: <23}".format("Name"), 'cyan') + ": " + termcolor.colored("{0}".format("dudette"), 'yellow'))
     termcolor.cprint("    Parameters", "cyan")
     for k, v in config.iteritems():
         if k != "groups":
@@ -26,5 +26,5 @@ def config_callback(config):
 
 if __name__ == '__main__':
     rospy.init_node("reconfiguration_client")
-    client = Client(name=rospy.get_param("~name", "dude"), config_callback=config_callback)
+    client = Client(name=rospy.get_param("~name", "dudette"), config_callback=config_callback)
     rospy.spin()

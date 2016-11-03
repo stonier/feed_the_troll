@@ -2,7 +2,7 @@
   <arg name="debug" default="true" doc="enable/disable verbose loading/unloading/updating information"/>
 
   <node pkg="feed_the_troll" type="reconfiguration_server.py" name="reconfiguration" output="screen">
-    <rosparam command="load" file="$(find feed_the_troll)/parameters/demo_reconfiguration_defaults.yaml"/>
+    <rosparam command="load" file="$(find feed_the_troll)/parameters/demo_reconfiguration_server.yaml"/>
     <param name="debug" value="$(arg debug)"/>
   </node>
 </launch>
