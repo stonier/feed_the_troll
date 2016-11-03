@@ -20,9 +20,12 @@ need do is feed it with a yaml/rosparam configuration that will define
 the dynamic_reconfigure servers you wish to fire up along with any
 initial parameter overrides to use when instantiating them.
 
-It also manages these for free. That is, it is able to bring the
-dynamic reconfigure servers up and down in sync with the starting
-up and tearing down of your higher level applications.
+It also manages these for free. You can start with an initial
+collection of default dynamic reconfigure servers with their
+respective configurations. You can then also dynamically
+bring up, update or tear down servers as you wish at a later
+time so that the reconfiguration syncs with the starting up
+and tearing down of your higher level applications.
 
 *Reconfigure your Reconfiguration!*
 
@@ -31,15 +34,16 @@ Server
 
 You will need to prepare the following (no coding necessary!):
 
-* A yaml defining the dyn-recfg servers you need
+* A yaml defining the default dyn-recfg servers you need
 * A launcher for starting the reconfiguration server
-* A launcher for starting the feeder with your yaml configuration
+* (Optional) A yaml defining new dyn-recfg servers to manage, or update default ones
+* (Optional) A launcher for starting the feeder with your yaml configuration
 
-If you're familiar with nodelet managers and nodelets, this process is similar.
+If you're familiar with nodelet managers and nodelets, the feeders work similarly.
 When the feeder node launches it sends a request to the server to fire up
-the specified list of dynamic reconfigure servers. When it terminates,
+or update the specified list of dynamic reconfigure servers. When it terminates,
 it will shoot one last service call off to the reconfiguration server to
-shutdown the previously started dynamic reconfigure servers.
+shutdown or reset the previously started reconfigure servers.
 
 Example - Launch Reconfiguration
 ================================
@@ -49,12 +53,15 @@ An example set of files (also available as a demo within this package):
 .. literalinclude:: ../launch/demo_reconfiguration_server.launch
    :language: xml
 
+.. literalinclude:: ../parameters/demo_reconfiguration_server.yaml
+   :language: yaml
+
 feed it using this package's parameter feeder:
 
 .. literalinclude:: ../launch/demo_reconfiguration_feeder.launch
    :language: xml
 
-.. literalinclude:: ../parameters/demo_reconfiguration.yaml
+.. literalinclude:: ../parameters/demo_reconfiguration_feeder.yaml
    :language: yaml
 
 A snapshot of the rosparam server is useful to illustrate where the various parameters
@@ -65,33 +72,40 @@ explicitly instructed to start its dynamic reconfigure server elsewhere.
 .. code-block:: bash
 
    $ rosparam list
-   /feeder_snorriheim_24447_410607863113126015/parameters/dude/module
-   /feeder_snorriheim_24447_410607863113126015/parameters/dude/overrides/bool_param
-   /feeder_snorriheim_24447_410607863113126015/parameters/dude/overrides/double_param
-   /feeder_snorriheim_24447_410607863113126015/parameters/dude/overrides/int_param
-   /feeder_snorriheim_24447_410607863113126015/parameters/dude/overrides/size
-   /feeder_snorriheim_24447_410607863113126015/parameters/dude/overrides/str_param
-   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/module
-   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/namespace
-   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/overrides/bool_param
-   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/overrides/double_param
-   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/overrides/int_param
-   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/overrides/size
-   /feeder_snorriheim_24447_410607863113126015/parameters/dudette/overrides/str_param
-   /feeder_snorriheim_24447_410607863113126015/server_namespace
+   /feeder_snorriwork_18767_3776865491990798862/parameters/dude/module
+   /feeder_snorriwork_18767_3776865491990798862/parameters/dude/overrides/bool_param
+   /feeder_snorriwork_18767_3776865491990798862/parameters/dude/overrides/double_param
+   /feeder_snorriwork_18767_3776865491990798862/parameters/dude/overrides/int_param
+   /feeder_snorriwork_18767_3776865491990798862/parameters/dude/overrides/size
+   /feeder_snorriwork_18767_3776865491990798862/parameters/dude/overrides/str_param
+   /feeder_snorriwork_18767_3776865491990798862/parameters/dudette/module
+   /feeder_snorriwork_18767_3776865491990798862/parameters/dudette/namespace
+   /feeder_snorriwork_18767_3776865491990798862/parameters/dudette/overrides/int_param
+   /feeder_snorriwork_18767_3776865491990798862/server_namespace
    /foo/troll/dudette/bool_param
    /foo/troll/dudette/double_param
    /foo/troll/dudette/int_param
    /foo/troll/dudette/size
    /foo/troll/dudette/str_param
+   /reconfiguration/bob/bool_param
+   /reconfiguration/bob/double_param
+   /reconfiguration/bob/int_param
+   /reconfiguration/bob/size
+   /reconfiguration/bob/str_param
    /reconfiguration/debug
    /reconfiguration/dude/bool_param
    /reconfiguration/dude/double_param
    /reconfiguration/dude/int_param
    /reconfiguration/dude/size
    /reconfiguration/dude/str_param
+   /reconfiguration/servers/bob/module
+   /reconfiguration/servers/dudette/module
+   /reconfiguration/servers/dudette/namespace
+   /reconfiguration/servers/dudette/overrides/bool_param
+   /reconfiguration/servers/dudette/overrides/double_param
+   /reconfiguration/servers/dudette/overrides/size
+   /reconfiguration/servers/dudette/overrides/str_param
    /reconfiguration_client/name
-
 
 Clients
 =======
