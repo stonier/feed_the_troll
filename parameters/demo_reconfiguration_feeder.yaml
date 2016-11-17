@@ -4,10 +4,9 @@
 # representative of a sibling namespace as is the case here
 server_namespace: reconfiguration
 
-# Define your individual dyn-recfg servers here
+# Define new or override already started dyn-recfg servers here
 parameters:
-
-#  # A dyn-recfg server definition - with this name it will be found at 'reconfiguration/dude'
+  # Load up a brand new reconfigure server (this wasn't already started by the reconfiguration node)
   dude:
     # The dyn-recfg type (it is actually a python module) - don't forget the 'Config' suffix!
     module: feed_the_troll.cfg.DemoConfig
@@ -19,11 +18,11 @@ parameters:
       bool_param: False
       size: 2
 
-  # Another dyn-recfg server definition - will be found at 'reconfiguration/dudette'
+  # Override a default server's settings
   dudette:
     module: feed_the_troll.cfg.DemoConfig
     # optionally direct the reconfigure server to be somewhere other than the reconfiguration server's private namespace
-    namespace: /foo/troll
+    namespace: /foo/troll/dudette
     overrides:
       int_param: 1
       #double_param: 0.6

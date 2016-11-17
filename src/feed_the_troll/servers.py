@@ -54,8 +54,10 @@ def namespace_from_configuration(server_name, server_configuration):
     """
     :param ... configuration: troll reconfiguration server parameters (name, namespace, overrides)
     """
-    root_namespace = server_configuration['namespace'] if 'namespace' in server_configuration else '~'
-    return rosgraph.names.ns_join(root_namespace, server_name)
+    namespace = server_configuration['namespace'] if 'namespace' in server_configuration else server_name
+    if not namespace.startswith('/') and not namespace.startswith('~'):
+        namespace = rosgraph.names.ns_join('~', namespace)
+    return rospy.resolve_name(namespace)
 
 ##############################################################################
 # ReConfiguration
@@ -289,6 +291,7 @@ class ReConfiguration(object):
             print("")
             termcolor.cprint("  Reconfigure Server", "green")
             print("    " + termcolor.colored("{0: <23}".format("Name"), 'cyan') + ": " + termcolor.colored("{0}".format(name), 'yellow'))
+            print("    " + termcolor.colored("{0: <23}".format("Namespace"), 'cyan') + ": " + termcolor.colored("{0}".format(self.reconfigure_servers[name].namespace), 'yellow'))
             termcolor.cprint("    Overrides", "cyan")
             for k, v in config.iteritems():
                 if k != "groups":
@@ -306,6 +309,7 @@ class ReConfiguration(object):
             for k, v in parameters.iteritems():
                 print("  " + termcolor.colored("{0}".format("Reconfigure Server"), 'green'))
                 print("    " + termcolor.colored("{0: <23}".format("Name"), 'cyan') + ": " + termcolor.colored("{0}".format(k), 'yellow'))
+                print("    " + termcolor.colored("{0: <23}".format("Namespace"), 'cyan') + ": " + termcolor.colored("{0}".format(namespace_from_configuration(k, v)), 'yellow'))
                 if 'module' in v:
                     print("    " + termcolor.colored("{0: <23}".format("Type"), 'cyan') + ": " + termcolor.colored("{0}".format(v['module']), 'yellow'))
                 else:
