@@ -13,7 +13,7 @@ parameters:
     # Load some initialisations to the param server that override those in the .cfg files
     overrides:
       int_param: 5
-      double_param: 0.6
+      #double_param: 0.6
       str_param: Dude
       bool_param: False
       size: 2
@@ -25,7 +25,7 @@ parameters:
     namespace: /foo/troll/dudette
     overrides:
       int_param: 1
-      #double_param: 0.6
+      #double_param: 0.5
       #str_param: Dudette
       #bool_param: False
       #size: 2

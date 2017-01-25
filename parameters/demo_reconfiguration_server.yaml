@@ -15,7 +15,7 @@ servers:
     namespace: /foo/troll/dudette
     # overrides are optional...and can be partial
     overrides:
-      # int_param: 5
+      # int_param: 50
       double_param: 0.6
       str_param: Dudette
       bool_param: False
