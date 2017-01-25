@@ -107,3 +107,4 @@ class ROSParameters(Base):
                 rospy.logerr("Feeder: failed to unload configuration [{0}]".format(response.message))
         except rospy.ServiceException as e:
             rospy.logerr("Feeder: failed to contact the configuration server [{0}][{1}]".format(self._unload_service_name, str(e)))
+        rospy.delete_param(rosgraph.names.ns_join(rospy.get_namespace(), rospy.get_name()))
