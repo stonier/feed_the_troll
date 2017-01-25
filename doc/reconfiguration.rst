@@ -12,9 +12,8 @@ amongst a collection of nodes?*
 
 A good example is sharing navigation motion constraints amongst
 a collection of nodes that control the motion of the base (general
-navigation, parking, docking, ...)
-
-This standalone node volunteers for the responsibility of loading and
+navigation, parking, docking, ...) This standalone node
+volunteers for the responsibility of loading and
 managing dynamic reconfigure servers from a central location. All you
 need do is feed it with a yaml/rosparam configuration that will define
 the dynamic_reconfigure servers you wish to fire up along with any
@@ -34,34 +33,61 @@ Server
 
 You will need to prepare the following (no coding necessary!):
 
-* A yaml defining the default dyn-recfg servers you need
+**Reconfiguration Node**
+
+* (Optional) A yaml defining the default dyn-reconf servers to run on startup
 * A launcher for starting the reconfiguration server
-* (Optional) A yaml defining new dyn-recfg servers to manage, or update default ones
-* (Optional) A launcher for starting the feeder with your yaml configuration
+
+**Feeders (Optional)**
+
+* A yaml defining new dyn-reconf servers to manage, or supercede default servers
+* A launcher for starting the feeder with your yaml configuration
 
 If you're familiar with nodelet managers and nodelets, the feeders work similarly.
 When the feeder node launches it sends a request to the server to fire up
 or update the specified list of dynamic reconfigure servers. When it terminates,
-it will shoot one last service call off to the reconfiguration server to
+it will send one last service call off to the reconfiguration server to
 shutdown or reset the previously started reconfigure servers.
 
-Example - Launch Reconfiguration
-================================
+Some policies/conventions that apply:
+
+**Initialisation of Parameters** : all parameters for new dyn-reconf servers are
+initialised by values in the `overrides` section in the reconfiguration node/feeder
+yamls, otherwise falling back to defaults from the `.cfg` files. Do
+not initialise these parameters directly as is the norm (e.g. via rosparam in
+roslaunch files).
+
+**Dynamic Loading on Top of Default Profiles** : having a default dyn-reconf server
+started by the reconfiguration node and then later feeding the same dyn-reconf
+server with an updated set of overrides is a great means of toggling parameter
+profiles for a dyn-reconf server. It is important to note here that this implementation
+*merges* the incoming overrides with the currently saved parameters and that it
+restores these when the feeder shuts down.
+
+.. image:: images/superceding.png
+
+
+Examples - Reconfiguration
+==========================
 
 An example set of files (also available as a demo within this package):
 
 .. literalinclude:: ../launch/demo_reconfiguration_server.launch
+   :caption: Reconfiguration Node - Launch
    :language: xml
 
 .. literalinclude:: ../parameters/demo_reconfiguration_server.yaml
+   :caption: Reconfiguration Node - Yaml
    :language: yaml
 
-feed it using this package's parameter feeder:
+Feed it using this package's parameter feeder:
 
 .. literalinclude:: ../launch/demo_reconfiguration_feeder.launch
+   :caption: Feeder - Launch
    :language: xml
 
 .. literalinclude:: ../parameters/demo_reconfiguration_feeder.yaml
+   :caption: Feeder - Yaml
    :language: yaml
 
 A snapshot of the rosparam server is useful to illustrate where the various parameters
@@ -70,6 +96,7 @@ placed in two places - *dude* is inside the reconfiguration server, while *dudet
 explicitly instructed to start its dynamic reconfigure server elsewhere.
 
 .. code-block:: bash
+   :caption: Param List
 
    $ rosparam list
    /feeder_snorriwork_18767_3776865491990798862/parameters/dude/module

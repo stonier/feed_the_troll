@@ -166,8 +166,25 @@ class ReConfiguration(object):
         """
         reconfigure_module = importlib.import_module(server_configuration['module'])
         reconfigure_server_namespace = namespace_from_configuration(server_name, server_configuration)
-        if 'overrides' in server_configuration:
-            rospy.set_param(reconfigure_server_namespace, server_configuration['overrides'])
+        #
+        # Reset: Start with a clean slate - i.e. ensure that any settings from a
+        # previous feeder (or other rubbish) is cleared out. Easiest done by
+        # writing in the dyn reconf server defaults.
+        #
+        # Note: Simply deleting/overwriting the entire the namespace (brute force) works
+        # but only if it is assumed that the user has reserved the naemspace for this
+        # dyn reconf server. This is not always true and if there are other static
+        # params there, they will be wiped out too.
+        defaults = reconfigure_module.defaults.copy()
+        print("Starting Server : %s" % server_name)
+        for name, value in defaults.iteritems():
+            full_parameter_path = reconfigure_server_namespace + "/" + name
+            if 'overrides' in server_configuration and name in server_configuration['overrides'].keys():
+                print("  Override: %s: %s" % (full_parameter_path, server_configuration['overrides'][name]))
+                rospy.set_param(full_parameter_path, server_configuration['overrides'][name])
+            else:
+                print("  Default : %s: %s" % (full_parameter_path, value))
+                rospy.set_param(full_parameter_path, value)
         return dynamic_reconfigure.server.Server(
             reconfigure_module,
             functools.partial(self.callback, name=server_name),
