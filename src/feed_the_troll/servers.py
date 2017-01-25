@@ -176,14 +176,11 @@ class ReConfiguration(object):
         # dyn reconf server. This is not always true and if there are other static
         # params there, they will be wiped out too.
         defaults = reconfigure_module.defaults.copy()
-        print("Starting Server : %s" % server_name)
         for name, value in defaults.iteritems():
             full_parameter_path = reconfigure_server_namespace + "/" + name
             if 'overrides' in server_configuration and name in server_configuration['overrides'].keys():
-                print("  Override: %s: %s" % (full_parameter_path, server_configuration['overrides'][name]))
                 rospy.set_param(full_parameter_path, server_configuration['overrides'][name])
             else:
-                print("  Default : %s: %s" % (full_parameter_path, value))
                 rospy.set_param(full_parameter_path, value)
         return dynamic_reconfigure.server.Server(
             reconfigure_module,
