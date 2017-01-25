@@ -166,8 +166,20 @@ class ReConfiguration(object):
         """
         reconfigure_module = importlib.import_module(server_configuration['module'])
         reconfigure_server_namespace = namespace_from_configuration(server_name, server_configuration)
+
+        default_config = reconfigure_module.defaults.copy()
+        for parameter in default_config:
+            full_parameter_path = reconfigure_server_namespace + "/" + parameter
+            rospy.set_param(full_parameter_path, default_config[parameter])
+
         if 'overrides' in server_configuration:
-            rospy.set_param(reconfigure_server_namespace, server_configuration['overrides'])
+            parameters = {}
+            namespace_exists = rospy.has_param(reconfigure_server_namespace)
+            if namespace_exists:
+                parameters = rospy.get_param(reconfigure_server_namespace)
+            parameters.update(server_configuration['overrides'])
+            rospy.set_param(reconfigure_server_namespace, parameters)
+
         return dynamic_reconfigure.server.Server(
             reconfigure_module,
             functools.partial(self.callback, name=server_name),
