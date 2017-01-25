@@ -1,6 +1,6 @@
 <package format="2">
   <name>feed_the_troll</name>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <description>Mechanisms for loading a ros node at runtime.</description>
   <maintainer email="d.stonier@gmail.com">Daniel Stonier</maintainer>
   <license>MIT</license>
